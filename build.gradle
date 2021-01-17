@@ -1,0 +1,27 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+repositories {
+    mavenCentral()
+}
+
+def aws_sdk_version = '1.11.465'
+
+dependencies {
+
+    compile (
+        'com.amazonaws:aws-lambda-java-core:1.2.0',
+        'com.amazonaws:aws-lambda-java-events:2.2.4',
+        "com.amazonaws:aws-java-sdk-stepfunctions:${aws_sdk_version}",
+        "com.amazonaws:aws-java-sdk-sns:${aws_sdk_version}",
+        "com.amazonaws:aws-java-sdk-s3:${aws_sdk_version}",
+        'org.json:json:20180813'
+     )
+}
+
+task buildZip(type: Zip) {
+    from compileJava
+}
+
+sourceCompatibility = '11'
+targetCompatibility = '11'

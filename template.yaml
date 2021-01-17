@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda layer for Image Analyzer app
+Resources:
+  imageAnalyzerLambdaWorkflowLauncher:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: image-analyzer-lambda-workflow-launcher
+      AutoPublishAlias: prod
+      Handler: cloud.developing.imageanalyzer.Launcher::launch
+      Runtime: java8
+      CodeUri: ./build/distributions/image-analyzer-lambda-workflow-launcher.zip
+      MemorySize: 512
+      Timeout: 30
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/lambda_exec_role
+      Environment: 
+        Variables: 
+           STATE_MACHINE_ARN: !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:image-analyzer-workflow
+      Layers: 
+        - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:image-analyzer-lambda-layer:3
+      Events:
+        createObjectEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref mediaBucket
+            Events: s3:ObjectCreated:*      
+  mediaBucket:
+    Type: AWS::S3::Bucket
+  permissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Sub ${imageAnalyzerLambdaWorkflowLauncher.Arn}:prod
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub ${mediaBucket.Arn}
+  
